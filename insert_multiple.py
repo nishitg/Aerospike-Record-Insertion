@@ -6,7 +6,6 @@ import string
 from multiprocessing import Process, Lock, Pool
 import time
 import configs
-import csv
 
 def closeClient (client):
 	client.close()
@@ -15,7 +14,7 @@ def insertInAS(client,record,asParams):
     try:
         key = (asParams['namespace'], asParams['set'], record[configs.PK_field])
         client.put(key,record)
-	print ("Inserted", record[configs.PK_field])
+	print("Inserted", record[configs.PK_field])
     except ex.RecordError as e:
         print("Error: {} [{}]".format(e.msg, e.code))
     except Exception as e:
@@ -35,13 +34,13 @@ def parseRecord():
 	return record
 
 def setParams():
-	asParams = {}
-	asParams['user_name']=configs.user_name
-	asParams["password"]=configs.password
-	asParams["namespace"]=configs.namespace
-	asParams["set"]=configs.set
-	
-	hosts = configs.hosts
+	asParams={}
+        asParams['user_name']=configs.user_name
+        asParams["password"]=configs.password
+        asParams["namespace"]=configs.namespace
+        asParams["set"]=configs.set
+
+        hosts = configs.hosts
 	config = {'hosts': hosts}
 	write_policies = {'total_timeout': 20000, 'max_retries': 10}
 	read_policies = {'total_timeout': 15000, 'max_retries': 10}
@@ -54,9 +53,11 @@ def main():
 	config, asParams = setParams()
 	record = parseRecord()
 	client = connectToAS(config, asParams)
-	f = csv.DictReader(open("records.csv","r"))
+	f = open("PK_list.txt","r")
 	for line in f:
-		insertInAS(client,line,asParams)
+		pkey = str(line.strip())
+		record[configs.PK_field]=pkey
+		insertInAS(client,record,asParams)
 	closeClient(client)
 	
 if __name__ == '__main__':
